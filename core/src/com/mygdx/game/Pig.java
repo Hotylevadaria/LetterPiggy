@@ -9,7 +9,7 @@ public class Pig {
     float width, height;
     float vx, vy;
     boolean isVisible = true;
-    int lives = 3;
+    int lives = 5;
     long timeStartInvisible, timeInvisibleInterval = 1000;
     long timeStartEat, timeEatInterval = 100;
     int faza, nFaz = 4;

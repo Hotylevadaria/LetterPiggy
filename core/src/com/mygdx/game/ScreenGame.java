@@ -24,7 +24,7 @@ public class ScreenGame implements Screen {
 
     static final float MOUTH_X = 406, MOUTH_Y = 480;
 
-    Sound sndShot, sndExplosion;
+    Sound sndOy, sndEat;
 
     Pig pig;
     ArrayList<Food> foods = new ArrayList<>();
@@ -33,10 +33,9 @@ public class ScreenGame implements Screen {
     boolean isAccelerometerAvailable;
 
     long timeEnemyLastSpawn, timeEnemySpawnInterval = 1000;
-    long timeShotLastSpawn, timeShotSpawnInterval = 500;
 
     boolean pause;
-    int frags;
+    int letters;
 
     public ScreenGame(LetterPiggy myGG){
         gg = myGG;
@@ -45,8 +44,8 @@ public class ScreenGame implements Screen {
         imgEnemy = new Texture("enemy.png");
         imgFoodAtlas = new Texture("food.png");
         for (int i = 0; i < 2; i++) {
-            imgFood[i] = new TextureRegion(imgFoodAtlas, 0*i, 0, 250, 250);
-            imgFood[i+2] = new TextureRegion(imgFoodAtlas, 0*i, 250, 250, 250);
+            imgFood[i] = new TextureRegion(imgFoodAtlas, i*250, 0, 250, 250);
+            imgFood[i+2] = new TextureRegion(imgFoodAtlas, i*250, 250, 250, 250);
         }
 
         imgPig[0][0] = new Texture("pig/pig01.png");
@@ -58,17 +57,20 @@ public class ScreenGame implements Screen {
         imgPig[1][2] = new Texture("pig/pig03.png");
         imgPig[1][3] = new Texture("pig/pig02.png");
 
-        sndExplosion = Gdx.audio.newSound(Gdx.files.internal("explosion.wav"));
+        sndEat = Gdx.audio.newSound(Gdx.files.internal("hruu.mp3"));
+        sndOy = Gdx.audio.newSound(Gdx.files.internal("oy.mp3"));
 
         isAccelerometerAvailable = Gdx.input.isPeripheralAvailable(Input.Peripheral.Accelerometer);
         isGyroscopeAvailable = Gdx.input.isPeripheralAvailable(Input.Peripheral.Gyroscope);
-        pig = new Pig(330, 385, 600, 600);
     }
 
     @Override
     public void show() {
         Gdx.input.setCatchKey(Input.Keys.BACK, true);
         pause = false;
+        pig = new Pig(330, 385, 600, 600);
+        foods.clear();
+        letters = 0;
     }
 
     @Override
@@ -93,7 +95,7 @@ public class ScreenGame implements Screen {
                         foods.get(i).goPiggyMouth();
                         //ponchiks.remove(i);
                         //if(gg.soundOn) sndExplosion.play();
-                        frags++;
+                        letters++;
                     }
                 }
             }
@@ -107,6 +109,9 @@ public class ScreenGame implements Screen {
             for (int i = foods.size()-1; i >= 0 ; i--) {
                 foods.get(i).move();
                 if(foods.get(i).x<MOUTH_X+300) {
+                    if(!pig.isEat) {
+                        if (gg.soundOn) sndEat.play();
+                    }
                     pig.eat();
                 }
                 if(foods.get(i).x<MOUTH_X) {
@@ -115,6 +120,8 @@ public class ScreenGame implements Screen {
                 }
                 if (foods.get(i).outOfBounds()) {
                     //if(pig.isVisible) killShip();
+                    killPig();
+                    if(gg.soundOn) sndOy.play();
                     foods.remove(i);
                 }
             }
@@ -131,16 +138,17 @@ public class ScreenGame implements Screen {
                 0, 0, 500, 500, true, false);
 
         for(Food food: foods) {
-            gg.batch.draw(imgFood[food.type], food.getX(), food.getY(), food.width, food.height);
+            gg.batch.draw(imgFood[food.type], food.getX(), food.getY(), food.width/2, food.height/2,
+                    food.width, food.height, 1, 1, food.rotation);
             if(!food.isGoPiggyMouth) gg.font.draw(gg.batch, ""+food.letter, food.x-12, food.y+100);
         }
 
         if(pig.isVisible) gg.batch.draw(imgPig[1][pig.faza], pig.getX(), pig.getY(), pig.width, pig.height,
                 0, 0, 500, 500, true, false);
 
-        gg.font.draw(gg.batch, "FRAGS: "+frags, 10, SCR_HEIGHT-10);
+        gg.font.draw(gg.batch, "LETTERS: "+ letters, 10, SCR_HEIGHT-10);
         for (int i = 1; i < pig.lives+1; i++) {
-            gg.batch.draw(imgShip, SCR_WIDTH-60*i, SCR_HEIGHT-60, 50, 50);
+            gg.batch.draw(imgShip, SCR_WIDTH-110*i, SCR_HEIGHT-110, 100, 100);
         }
         gg.batch.end();
     }
@@ -163,7 +171,6 @@ public class ScreenGame implements Screen {
     @Override
     public void hide() {
         Gdx.input.setCatchKey(Input.Keys.BACK, false);
-        pause = true;
     }
 
     @Override
@@ -176,7 +183,8 @@ public class ScreenGame implements Screen {
             }
 
         }
-        sndExplosion.dispose();
+        sndEat.dispose();
+        sndOy.dispose();
     }
 
     void spawnEnemy(){
@@ -187,8 +195,10 @@ public class ScreenGame implements Screen {
     }
 
 
-    void killShip(){
-        pig.kill();
-        if(gg.soundOn) sndExplosion.play();
+    void killPig(){
+        if(gg.soundOn) sndOy.play();
+        if(--pig.lives == 0) {
+            gg.setScreen(gg.screenIntro);
+        }
     }
 }
