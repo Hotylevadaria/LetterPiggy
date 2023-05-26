@@ -15,20 +15,19 @@ import java.util.ArrayList;
 
 public class ScreenGame implements Screen {
     LetterPiggy gg;
-    Texture imgStars;
+    Texture imgBG;
     Texture imgShip;
     Texture imgEnemy;
-    Texture imgShot;
-    Texture imgAtlasFragment;
-    TextureRegion[] imgFragment = new TextureRegion[4];
+    Texture imgFoodAtlas;
+    Texture[][] imgPig = new Texture[2][4];
+    TextureRegion[] imgFood = new TextureRegion[4];
+
+    static final float MOUTH_X = 406, MOUTH_Y = 480;
 
     Sound sndShot, sndExplosion;
 
-    Sky[] skies = new Sky[2];
-    Ship ship;
-    ArrayList<Ponchik> ponchiks = new ArrayList<>();
-    ArrayList<Shot> shots = new ArrayList<>();
-    ArrayList<Fragment> fragments = new ArrayList<>();
+    Pig pig;
+    ArrayList<Food> foods = new ArrayList<>();
 
     boolean isGyroscopeAvailable;
     boolean isAccelerometerAvailable;
@@ -41,25 +40,29 @@ public class ScreenGame implements Screen {
 
     public ScreenGame(LetterPiggy myGG){
         gg = myGG;
-        imgStars = new Texture("stars.png");
+        imgBG = new Texture("kitchen.png");
         imgShip = new Texture("ship.png");
         imgEnemy = new Texture("enemy.png");
-        imgShot = new Texture("shot.png");
-        imgAtlasFragment = new Texture("fragment.png");
-        imgFragment[0] = new TextureRegion(imgAtlasFragment, 0, 0, 200, 200);
-        imgFragment[1] = new TextureRegion(imgAtlasFragment, 200, 0, 200, 200);
-        imgFragment[2] = new TextureRegion(imgAtlasFragment, 0, 200, 200, 200);
-        imgFragment[3] = new TextureRegion(imgAtlasFragment, 200, 200, 200, 200);
+        imgFoodAtlas = new Texture("food.png");
+        for (int i = 0; i < 2; i++) {
+            imgFood[i] = new TextureRegion(imgFoodAtlas, 0*i, 0, 250, 250);
+            imgFood[i+2] = new TextureRegion(imgFoodAtlas, 0*i, 250, 250, 250);
+        }
 
-        sndShot = Gdx.audio.newSound(Gdx.files.internal("blaster.wav"));
+        imgPig[0][0] = new Texture("pig/pig01.png");
+        imgPig[0][1] = new Texture("pig/pig12.png");
+        imgPig[0][2] = new Texture("pig/pig13.png");
+        imgPig[0][3] = new Texture("pig/pig12.png");
+        imgPig[1][0] = new Texture("pig/pig01.png");
+        imgPig[1][1] = new Texture("pig/pig02.png");
+        imgPig[1][2] = new Texture("pig/pig03.png");
+        imgPig[1][3] = new Texture("pig/pig02.png");
+
         sndExplosion = Gdx.audio.newSound(Gdx.files.internal("explosion.wav"));
-
-        skies[0] = new Sky(SCR_WIDTH/2, SCR_HEIGHT/2);
-        skies[1] = new Sky(SCR_WIDTH/2, SCR_HEIGHT+SCR_HEIGHT/2);
 
         isAccelerometerAvailable = Gdx.input.isPeripheralAvailable(Input.Peripheral.Accelerometer);
         isGyroscopeAvailable = Gdx.input.isPeripheralAvailable(Input.Peripheral.Gyroscope);
-        ship = new Ship(SCR_WIDTH/2, 150, 200, 200);
+        pig = new Pig(330, 385, 600, 600);
     }
 
     @Override
@@ -74,22 +77,22 @@ public class ScreenGame implements Screen {
         if(Gdx.input.isTouched()){
             gg.touch.set(Gdx.input.getX(), Gdx.input.getY(), 0);
             gg.camera.unproject(gg.touch);
-            ship.hit(gg.touch.x, gg.touch.y);
+            System.out.println(gg.touch.x+" "+gg.touch.y);
         } else if(isAccelerometerAvailable) {
-            ship.vx = -Gdx.input.getAccelerometerX()*10;
+            pig.vx = -Gdx.input.getAccelerometerX()*10;
         } else if(isGyroscopeAvailable) {
-            ship.vx = Gdx.input.getGyroscopeY()*10;
+            pig.vx = Gdx.input.getGyroscopeY()*10;
         }
         if(Gdx.input.isKeyPressed(Input.Keys.BACK)){
             gg.setScreen(gg.screenIntro);
         }
         for(char c='A'; c<='Z'; c++) {
             if (Gdx.input.isKeyJustPressed(Input.Keys.valueOf(""+c))){
-                for (int i = 0; i < ponchiks.size(); i++) {
-                    if(ponchiks.get(i).letter == c) {
-                        spawnFragments(ponchiks.get(i).x, ponchiks.get(i).y);
-                        ponchiks.remove(i);
-                        if(gg.soundOn) sndExplosion.play();
+                for (int i = 0; i < foods.size(); i++) {
+                    if(foods.get(i).letter == c) {
+                        foods.get(i).goPiggyMouth();
+                        //ponchiks.remove(i);
+                        //if(gg.soundOn) sndExplosion.play();
                         frags++;
                     }
                 }
@@ -98,61 +101,45 @@ public class ScreenGame implements Screen {
 
         // события
         if(!pause) {
-            for (Sky sky : skies) sky.move();
-            ship.move();
-            if(ship.isVisible) {
-                spawnShot();
-            }
+            pig.move();
             spawnEnemy();
 
-            for (int i = ponchiks.size()-1; i >= 0 ; i--) {
-                ponchiks.get(i).move();
-                if (ponchiks.get(i).outOfBounds()) {
-                    if(ship.isVisible) killShip();
-                    ponchiks.remove(i);
+            for (int i = foods.size()-1; i >= 0 ; i--) {
+                foods.get(i).move();
+                if(foods.get(i).x<MOUTH_X+300) {
+                    pig.eat();
                 }
-            }
-            for (int i = shots.size()-1; i >= 0; i--) {
-                shots.get(i).move();
-                if (shots.get(i).outOfBounds()) {
-                    shots.remove(i);
-                    break;
+                if(foods.get(i).x<MOUTH_X) {
+                    foods.remove(i);
+                    continue;
                 }
-                for (int j = ponchiks.size()-1; j >= 0; j--) {
-                    if(shots.get(i).overlap(ponchiks.get(j))){
-                        spawnFragments(ponchiks.get(j).x, ponchiks.get(j).y);
-                        shots.remove(i);
-                        ponchiks.remove(j);
-                        if(gg.soundOn) sndExplosion.play();
-                        frags++;
-                        break;
-                    }
+                if (foods.get(i).outOfBounds()) {
+                    //if(pig.isVisible) killShip();
+                    foods.remove(i);
                 }
             }
         }
-        for (int i = fragments.size()-1; i >= 0 ; i--) {
-            fragments.get(i).move();
-            if (fragments.get(i).outOfBounds()) {
-                fragments.remove(i);
-            }
-        }
+
 
         // отрисовка всего
         gg.camera.update();
         gg.batch.setProjectionMatrix(gg.camera.combined);
         gg.batch.begin();
-        for(Sky sky: skies) gg.batch.draw(imgStars, sky.getX(), sky.getY(), sky.width, sky.height);
-        for(Fragment frag: fragments)
-            gg.batch.draw(imgFragment[frag.type], frag.getX(), frag.getY(), frag.width/2, frag.height/2,
-                    frag.width, frag.height, 1, 1, frag.angle);
-        for(Ponchik ponchik: ponchiks) {
-            gg.batch.draw(imgEnemy, ponchik.getX(), ponchik.getY(), ponchik.width, ponchik.height);
-            gg.font.draw(gg.batch, ""+ponchik.letter, ponchik.x-12, ponchik.y+100);
+        gg.batch.draw(imgBG, 0, 0, SCR_WIDTH, SCR_HEIGHT);
+
+        if(pig.isVisible) gg.batch.draw(imgPig[0][pig.faza], pig.getX(), pig.getY(), pig.width, pig.height,
+                0, 0, 500, 500, true, false);
+
+        for(Food food: foods) {
+            gg.batch.draw(imgFood[food.type], food.getX(), food.getY(), food.width, food.height);
+            if(!food.isGoPiggyMouth) gg.font.draw(gg.batch, ""+food.letter, food.x-12, food.y+100);
         }
-        for(Shot shot: shots) gg.batch.draw(imgShot, shot.getX(), shot.getY(), shot.width, shot.height);
-        if(ship.isVisible) gg.batch.draw(imgShip, ship.getX(), ship.getY(), ship.width, ship.height);
+
+        if(pig.isVisible) gg.batch.draw(imgPig[1][pig.faza], pig.getX(), pig.getY(), pig.width, pig.height,
+                0, 0, 500, 500, true, false);
+
         gg.font.draw(gg.batch, "FRAGS: "+frags, 10, SCR_HEIGHT-10);
-        for (int i = 1; i < ship.lives+1; i++) {
+        for (int i = 1; i < pig.lives+1; i++) {
             gg.batch.draw(imgShip, SCR_WIDTH-60*i, SCR_HEIGHT-60, 50, 50);
         }
         gg.batch.end();
@@ -181,37 +168,27 @@ public class ScreenGame implements Screen {
 
     @Override
     public void dispose() {
-        imgStars.dispose();
+        imgBG.dispose();
         imgShip.dispose();
-        imgAtlasFragment.dispose();
+        for (int i = 0; i < imgPig.length; i++) {
+            for (int j = 0; j < imgPig[0].length; j++) {
+                imgPig[i][j].dispose();
+            }
+
+        }
         sndExplosion.dispose();
-        sndShot.dispose();
     }
 
     void spawnEnemy(){
         if(TimeUtils.millis() > timeEnemyLastSpawn+timeEnemySpawnInterval) {
-            ponchiks.add(new Ponchik());
+            foods.add(new Food());
             timeEnemyLastSpawn = TimeUtils.millis();
         }
     }
 
-    void spawnShot(){
-        if(TimeUtils.millis() > timeShotLastSpawn+timeShotSpawnInterval) {
-            shots.add(new Shot(ship.x, ship.y));
-            timeShotLastSpawn = TimeUtils.millis();
-            if(gg.soundOn) sndShot.play();
-        }
-    }
-
-    void spawnFragments(float x, float y){
-        for (int i = 0; i < 30; i++) {
-            fragments.add(new Fragment(x, y));
-        }
-    }
 
     void killShip(){
-        spawnFragments(ship.x, ship.y);
-        ship.kill();
+        pig.kill();
         if(gg.soundOn) sndExplosion.play();
     }
 }

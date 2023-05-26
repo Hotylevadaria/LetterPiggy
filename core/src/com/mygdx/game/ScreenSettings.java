@@ -21,11 +21,11 @@ public class ScreenSettings implements Screen {
         gg = myGG;
         imgBackGround = new Texture("bg/cosmos02.jpg");
 
-        btnName = new TextButton(gg.fontLarge, "Имя: "+playerName, 20, 1100, true);
-        btnClearRec = new TextButton(gg.fontLarge, "Очистка рекордов", 20, 1000, true);
-        btnSound = new TextButton(gg.fontLarge, "Звук вкл", 20, 900, true);
-        btnMusic = new TextButton(gg.fontLarge, "Музыка вкл", 20, 800, true);
-        btnBack = new TextButton(gg.fontLarge, "Назад", 20, 700, true);
+        btnName = new TextButton(gg.fontLarge, "Имя: "+playerName, 20, 1000, true);
+        btnClearRec = new TextButton(gg.fontLarge, "Очистка рекордов", 20, 900, true);
+        btnSound = new TextButton(gg.fontLarge, "Звук вкл", 20, 800, true);
+        btnMusic = new TextButton(gg.fontLarge, "Музыка вкл", 20, 700, true);
+        btnBack = new TextButton(gg.fontLarge, "Назад", 20, 600, true);
 
         keyboard = new InputKeyboard(SCR_WIDTH, SCR_HEIGHT/1.7f, 8);
     }

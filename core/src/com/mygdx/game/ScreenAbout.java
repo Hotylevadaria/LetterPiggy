@@ -13,12 +13,9 @@ public class ScreenAbout implements Screen {
 
     TextButton btnBack;
     String textAbout =  "Эта игра-обучалка\n" +
-                        "создана в IT-школе\n" +
-                        "Samsung на Java\n" +
-                        "под Android c\n" +
-                        "использованием LibGdx\n\n" +
-                        "Цель игры - быстро набирать буквы и ориентироваться" +
-            " \n" +
+                        "создана в IT-школе Samsung \n" +
+                        "на Java под Android c использованием LibGdx\n\n" +
+                        "Цель игры - быстро набирать буквы и ориентироваться\n" +
                         "в клавиатуре\n";
 
     public ScreenAbout(LetterPiggy myGG){
@@ -50,7 +47,7 @@ public class ScreenAbout implements Screen {
         gg.batch.setProjectionMatrix(gg.camera.combined);
         gg.batch.begin();
         gg.batch.draw(imgBackGround, 0, 0, SCR_WIDTH, SCR_HEIGHT);
-        gg.font.draw(gg.batch, textAbout, 30, 1100);
+        gg.font.draw(gg.batch, textAbout, 30, 1000);
         btnBack.font.draw(gg.batch, btnBack.text, btnBack.x, btnBack.y);
         gg.batch.end();
     }

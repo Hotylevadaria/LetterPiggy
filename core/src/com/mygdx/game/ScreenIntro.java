@@ -18,10 +18,10 @@ public class ScreenIntro implements Screen {
         gg = myGG;
         imgBackGround = new Texture("bg/cosmos01.jpg");
         imgShip = new Texture("ship.png");
-        btnPlay = new TextButton(gg.fontLarge, "ИГРАТЬ", 100, 1100);
-        btnSettings = new TextButton(gg.fontLarge, "НАСТРОЙКИ", 100, 1000);
-        btnAbout = new TextButton(gg.fontLarge, "ОБ ИГРЕ", 100, 900);
-        btnExit = new TextButton(gg.fontLarge, "ВЫХОД", 100, 800);
+        btnPlay = new TextButton(gg.fontLarge, "ИГРАТЬ", 100, 1000);
+        btnSettings = new TextButton(gg.fontLarge, "НАСТРОЙКИ", 100, 900);
+        btnAbout = new TextButton(gg.fontLarge, "ОБ ИГРЕ", 100, 800);
+        btnExit = new TextButton(gg.fontLarge, "ВЫХОД", 100, 700);
     }
 
     @Override
